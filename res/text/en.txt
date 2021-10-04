@@ -1,0 +1,33 @@
+Ok ok
+Yes yes
+No no
+ShuttingDown shutting down
+Confirm confirm
+Cancel cancel
+Remove remove
+HyperlinkTooltip Open this site using the system's web browser
+MembraneMediaLibrary Membrane Media Library
+NotInstalled not installed
+NotRunning not running
+Running running
+Download download
+DownloadLinkText membranesoftware.com
+StartButtonTooltip Start server
+StopButtonTooltip Stop server
+ShutdownConfirmTooltip Close application
+ShutdownCancelTooltip Do not close application
+ScanningApplication scanning application
+Installed installed
+Starting starting
+Stopping stopping
+Version version
+StartupError startup error
+MediaLibraryUninstalledText Membrane Media Library is a free application that provides streaming services to remote video players. Download the latest version from:
+MediaLibraryWaitingText Finding Membrane install files
+MediaLibraryContactingText Finding server
+MediaLibraryContactingStartedApplicationText Waiting for server to become ready
+MediaLibraryWaitingStopApplicationText Waiting for server process to exit
+MediaLibraryStartErrorText The server failed to start due to an internal error.
+MediaLibraryStoppedText The server application is stopped. Start it to enable media streaming functions.
+MediaLibraryRunningText The server application is active and providing media streaming functions. Configure and command the server using Membrane Control. Download from:
+ShutdownConfirmText Stop the media library server and close the window?

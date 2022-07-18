@@ -1,5 +1,5 @@
 /*
-* Copyright 2018-2021 Membrane Software <author@membranesoftware.com> https://membranesoftware.com
+* Copyright 2018-2022 Membrane Software <author@membranesoftware.com> https://membranesoftware.com
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions are met:
@@ -34,6 +34,7 @@
 
 #include "SDL2/SDL.h"
 #include "StdString.h"
+#include "OsUtil.h"
 #include "Color.h"
 #include "Font.h"
 #include "SpriteGroup.h"
@@ -117,7 +118,7 @@ public:
 	static UiConfiguration *instance;
 
 	// Load resources referenced by the UiConfiguration and return a result value
-	int load (float fontScale = 1.0f);
+	OsUtil::Result load (float fontScale = 1.0f);
 
 	// Free resources allocated by any previous load operation
 	void unload ();
@@ -138,6 +139,7 @@ public:
 	int mouseHoverThreshold;
 	int blinkDuration; // ms
 	int backgroundCrossFadeDuration; // ms
+	int activityIconLingerDuration; // ms
 	StdString fontNames[UiConfiguration::FontCount];
 	int fontBaseSizes[UiConfiguration::FontCount];
 	int fontSizes[UiConfiguration::FontCount];
@@ -161,10 +163,12 @@ public:
 	Color flatButtonTextColor;
 	Color linkTextColor;
 	Color errorTextColor;
+	Color warningTextColor;
 	Color statusOkTextColor;
 	Color raisedButtonTextColor;
 	Color raisedButtonInverseTextColor;
 	Color raisedButtonBackgroundColor;
+	Color raisedButtonInverseBackgroundColor;
 	Color dropShadowColor;
 	float dropShadowWidth;
 	Color dividerColor;

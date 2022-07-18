@@ -1,5 +1,5 @@
 /*
-* Copyright 2018-2021 Membrane Software <author@membranesoftware.com> https://membranesoftware.com
+* Copyright 2018-2022 Membrane Software <author@membranesoftware.com> https://membranesoftware.com
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions are met:
@@ -98,29 +98,28 @@ void Ui::release () {
 	}
 }
 
-int Ui::load () {
+OsUtil::Result Ui::load () {
 	StdString path;
-	int result;
+	OsUtil::Result result;
 
 	if (isLoaded) {
-		return (OsUtil::Result::Success);
+		return (OsUtil::Success);
 	}
 	path = getSpritePath ();
 	if (! path.empty ()) {
 		result = sprites.load (path);
-		if (result != OsUtil::Result::Success) {
+		if (result != OsUtil::Success) {
 			Log::err ("Failed to load sprite resources");
 			return (result);
 		}
 	}
 
 	result = doLoad ();
-	if (result != OsUtil::Result::Success) {
+	if (result != OsUtil::Success) {
 		return (result);
 	}
-
 	isLoaded = true;
-	return (OsUtil::Result::Success);
+	return (OsUtil::Success);
 }
 
 void Ui::unload () {
@@ -141,9 +140,9 @@ StdString Ui::getSpritePath () {
 	return (StdString (""));
 }
 
-int Ui::doLoad () {
+OsUtil::Result Ui::doLoad () {
 	// Default implementation does nothing
-	return (OsUtil::Result::Success);
+	return (OsUtil::Success);
 }
 
 void Ui::doUnload () {
@@ -184,7 +183,6 @@ bool Ui::keyEvent (void *uiPtr, SDL_Keycode keycode, bool isShiftDown, bool isCo
 
 bool Ui::processKeyEvent (SDL_Keycode keycode, bool isShiftDown, bool isControlDown) {
 	// Base class method takes no action
-
 	return (doProcessKeyEvent (keycode, isShiftDown, isControlDown));
 }
 
@@ -290,9 +288,15 @@ void Ui::doDraw () {
 }
 
 void Ui::clearPopupWidgets () {
+	// Base class method takes no action
 	doClearPopupWidgets ();
 }
 
 Widget *Ui::addWidget (Widget *widget, float positionX, float positionY, int zLevel) {
 	return (rootPanel->addWidget (widget, positionX, positionY, zLevel));
+}
+
+bool Ui::openWidget (const StdString &targetName) {
+	// Default implementation does nothing
+	return (false);
 }

@@ -1,5 +1,5 @@
 /*
-* Copyright 2018-2021 Membrane Software <author@membranesoftware.com> https://membranesoftware.com
+* Copyright 2018-2022 Membrane Software <author@membranesoftware.com> https://membranesoftware.com
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions are met:
@@ -32,6 +32,7 @@
 #ifndef MAIN_UI_H
 #define MAIN_UI_H
 
+#include "OsUtil.h"
 #include "WidgetHandle.h"
 #include "MediaLibraryWindow.h"
 #include "Ui.h"
@@ -43,7 +44,7 @@ public:
 
 protected:
 	// Load subclass-specific resources and return a result value
-	int doLoad ();
+	OsUtil::Result doLoad ();
 
 	// Unload subclass-specific resources
 	void doUnload ();

@@ -1,5 +1,5 @@
 /*
-* Copyright 2018-2021 Membrane Software <author@membranesoftware.com> https://membranesoftware.com
+* Copyright 2018-2022 Membrane Software <author@membranesoftware.com> https://membranesoftware.com
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions are met:
@@ -32,8 +32,8 @@
 #include <math.h>
 #include "SDL2/SDL.h"
 #include "App.h"
-#include "Log.h"
 #include "StdString.h"
+#include "StringList.h"
 #include "Input.h"
 #include "UiConfiguration.h"
 #include "Widget.h"
@@ -142,8 +142,6 @@ void Widget::update (int msElapsed, float originX, float originY) {
 		fixedCenterPosition.update (msElapsed);
 		x = fixedCenterPosition.x - (width / 2.0f);
 		y = fixedCenterPosition.y - (height / 2.0f);
-
-		// TODO: Possibly use a smooth translation here
 		if (! position.equals (x, y)) {
 			position.assign (x, y);
 			screenX = position.x + originX;
@@ -217,15 +215,12 @@ void Widget::setKeyFocus (bool enable) {
 }
 
 bool Widget::processKeyEvent (SDL_Keycode keycode, bool isShiftDown, bool isControlDown) {
-
 	if (isInputSuspended) {
 		return (false);
 	}
-
 	if (keyEventCallback.callback && keyEventCallback.callback (keyEventCallback.callbackData, keycode, isShiftDown, isControlDown)) {
 		return (true);
 	}
-
 	return (doProcessKeyEvent (keycode, isShiftDown, isControlDown));
 }
 
@@ -239,11 +234,19 @@ Widget *Widget::findWidget (float screenPositionX, float screenPositionY, bool r
 	return (NULL);
 }
 
+Widget *Widget::findWidget (const StdString &widgetName) {
+	// Default implementation returns NULL
+	return (NULL);
+}
+
+void Widget::getWidgetNames (StringList *destList) {
+	// Default implementation does nothing
+}
+
 bool Widget::processMouseState (const Widget::MouseState &mouseState) {
 	if (isInputSuspended) {
 		return (false);
 	}
-
 	if (mouseState.isEntered) {
 		if (! isMouseEntered) {
 			isMouseEntered = true;
@@ -400,6 +403,5 @@ Widget::Rectangle Widget::getScreenRect () {
 		rect.w = width;
 		rect.h = height;
 	}
-
 	return (rect);
 }

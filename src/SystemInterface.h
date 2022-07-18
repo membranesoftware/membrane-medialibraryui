@@ -1,5 +1,5 @@
 /*
-* Copyright 2018-2021 Membrane Software <author@membranesoftware.com> https://membranesoftware.com
+* Copyright 2018-2022 Membrane Software <author@membranesoftware.com> https://membranesoftware.com
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions are met:
@@ -40,6 +40,7 @@
 class SystemInterface {
 public:
   static const char *version;
+  static const char *Command_AddMediaTag;
   static const char *Command_AgentConfiguration;
   static const char *Command_AgentContact;
   static const char *Command_AgentStatus;
@@ -75,6 +76,7 @@ public:
   static const char *Command_ReadTasks;
   static const char *Command_RemoveIntent;
   static const char *Command_RemoveMedia;
+  static const char *Command_RemoveMediaTag;
   static const char *Command_RemoveStream;
   static const char *Command_ReportContact;
   static const char *Command_ReportStatus;
@@ -92,6 +94,7 @@ public:
   static const char *Command_UpdateIntentState;
   static const char *Command_WatchStatus;
   static const char *Command_WatchTasks;
+  static const int CommandId_AddMediaTag = 233;
   static const int CommandId_AgentConfiguration = 45;
   static const int CommandId_AgentContact = 33;
   static const int CommandId_AgentStatus = 1;
@@ -127,6 +130,7 @@ public:
   static const int CommandId_ReadTasks = 6;
   static const int CommandId_RemoveIntent = 37;
   static const int CommandId_RemoveMedia = 77;
+  static const int CommandId_RemoveMediaTag = 234;
   static const int CommandId_RemoveStream = 29;
   static const int CommandId_ReportContact = 32;
   static const int CommandId_ReportStatus = 2;
@@ -228,12 +232,14 @@ public:
 
 	StdString lastError;
 	std::map<StdString, SystemInterface::Command> commandMap;
+	std::map<int, StdString> commandIdMap;
 	std::map<StdString, SystemInterface::GetParamsFunction> getParamsMap;
 	std::map<StdString, SystemInterface::PopulateDefaultFieldsFunction> populateDefaultFieldsMap;
 	std::map<StdString, SystemInterface::HashFieldsFunction> hashFieldsMap;
 
 	// Return a newly created Json object containing a command item, or NULL if the command could not be created. commandParams can be NULL if not needed, causing the resulting command to contain empty parameter fields. If commandParams is not NULL, this method becomes responsible for freeing the object when it's no longer needed.
 	Json *createCommand (const SystemInterface::Prefix &prefix, const char *commandName, Json *commandParams = NULL);
+	Json *createCommand (const SystemInterface::Prefix &prefix, int commandId, Json *commandParams = NULL);
 
 	// Populate a command's authorization prefix field using the provided values and hash functions. Returns a boolean value indicating if the field was successfully generated.
 	bool setCommandAuthorization (Json *command, const StdString &authSecret, const StdString &authToken, SystemInterface::HashUpdateFunction hashUpdateFn, SystemInterface::HashDigestFunction hashDigestFn, void *hashContextPtr);
@@ -330,6 +336,7 @@ public:
 	bool getCommandObjectArrayItem (Json *command, const StdString &paramName, int index, Json *destJson);
 	bool getCommandObjectArrayItem (Json *command, const char *paramName, int index, Json *destJson);
 
+  static void getParams_AddMediaTag (std::list<SystemInterface::Param> *destList);
   static void getParams_AgentConfiguration (std::list<SystemInterface::Param> *destList);
   static void getParams_AgentContact (std::list<SystemInterface::Param> *destList);
   static void getParams_AgentStatus (std::list<SystemInterface::Param> *destList);
@@ -361,6 +368,7 @@ public:
   static void getParams_MediaServerStatus (std::list<SystemInterface::Param> *destList);
   static void getParams_RemoveIntent (std::list<SystemInterface::Param> *destList);
   static void getParams_RemoveMedia (std::list<SystemInterface::Param> *destList);
+  static void getParams_RemoveMediaTag (std::list<SystemInterface::Param> *destList);
   static void getParams_RemoveStream (std::list<SystemInterface::Param> *destList);
   static void getParams_ReportContact (std::list<SystemInterface::Param> *destList);
   static void getParams_ReportStatus (std::list<SystemInterface::Param> *destList);
@@ -375,6 +383,7 @@ public:
   static void getParams_UpdateAgentConfiguration (std::list<SystemInterface::Param> *destList);
   static void getParams_UpdateIntentState (std::list<SystemInterface::Param> *destList);
   static void getParams_WatchTasks (std::list<SystemInterface::Param> *destList);
+  static void populateDefaultFields_AddMediaTag (Json *destObject);
   static void populateDefaultFields_AgentConfiguration (Json *destObject);
   static void populateDefaultFields_AgentContact (Json *destObject);
   static void populateDefaultFields_AgentStatus (Json *destObject);
@@ -406,6 +415,7 @@ public:
   static void populateDefaultFields_MediaServerStatus (Json *destObject);
   static void populateDefaultFields_RemoveIntent (Json *destObject);
   static void populateDefaultFields_RemoveMedia (Json *destObject);
+  static void populateDefaultFields_RemoveMediaTag (Json *destObject);
   static void populateDefaultFields_RemoveStream (Json *destObject);
   static void populateDefaultFields_ReportContact (Json *destObject);
   static void populateDefaultFields_ReportStatus (Json *destObject);
@@ -420,6 +430,7 @@ public:
   static void populateDefaultFields_UpdateAgentConfiguration (Json *destObject);
   static void populateDefaultFields_UpdateIntentState (Json *destObject);
   static void populateDefaultFields_WatchTasks (Json *destObject);
+  static void hashFields_AddMediaTag (Json *commandParams, SystemInterface::HashUpdateFunction hashUpdateFn, void *hashContextPtr);
   static void hashFields_AgentConfiguration (Json *commandParams, SystemInterface::HashUpdateFunction hashUpdateFn, void *hashContextPtr);
   static void hashFields_AgentContact (Json *commandParams, SystemInterface::HashUpdateFunction hashUpdateFn, void *hashContextPtr);
   static void hashFields_AgentStatus (Json *commandParams, SystemInterface::HashUpdateFunction hashUpdateFn, void *hashContextPtr);
@@ -451,6 +462,7 @@ public:
   static void hashFields_MediaServerStatus (Json *commandParams, SystemInterface::HashUpdateFunction hashUpdateFn, void *hashContextPtr);
   static void hashFields_RemoveIntent (Json *commandParams, SystemInterface::HashUpdateFunction hashUpdateFn, void *hashContextPtr);
   static void hashFields_RemoveMedia (Json *commandParams, SystemInterface::HashUpdateFunction hashUpdateFn, void *hashContextPtr);
+  static void hashFields_RemoveMediaTag (Json *commandParams, SystemInterface::HashUpdateFunction hashUpdateFn, void *hashContextPtr);
   static void hashFields_RemoveStream (Json *commandParams, SystemInterface::HashUpdateFunction hashUpdateFn, void *hashContextPtr);
   static void hashFields_ReportContact (Json *commandParams, SystemInterface::HashUpdateFunction hashUpdateFn, void *hashContextPtr);
   static void hashFields_ReportStatus (Json *commandParams, SystemInterface::HashUpdateFunction hashUpdateFn, void *hashContextPtr);

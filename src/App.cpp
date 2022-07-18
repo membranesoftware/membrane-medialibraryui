@@ -1,5 +1,5 @@
 /*
-* Copyright 2018-2021 Membrane Software <author@membranesoftware.com> https://membranesoftware.com
+* Copyright 2018-2022 Membrane Software <author@membranesoftware.com> https://membranesoftware.com
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions are met:
@@ -56,6 +56,7 @@
 #include "SystemInterface.h"
 #include "Json.h"
 #include "Input.h"
+#include "Resource.h"
 #include "Network.h"
 #include "Panel.h"
 #include "MainUi.h"
@@ -88,6 +89,7 @@ void App::createInstance (bool shouldSkipInit) {
 	}
 	App::instance = new App ();
 	Input::instance = &(App::instance->input);
+	Resource::instance = &(App::instance->resource);
 	Network::instance = &(App::instance->network);
 	UiConfiguration::instance = &(App::instance->uiConfig);
 	UiText::instance = &(App::instance->uiText);
@@ -104,6 +106,7 @@ void App::freeInstance () {
 		delete (App::instance);
 		App::instance = NULL;
 		Input::instance = NULL;
+		Resource::instance = NULL;
 		Network::instance = NULL;
 		UiConfiguration::instance = NULL;
 		UiText::instance = NULL;
@@ -115,11 +118,11 @@ void App::freeInstance () {
 }
 
 App::App ()
-: shouldRefreshUi (false)
-, isInterfaceAnimationEnabled (false)
-, nextFontScale (1.0f)
+: nextFontScale (1.0f)
 , nextWindowWidth (0)
 , nextWindowHeight (0)
+, shouldRefreshUi (false)
+, isInterfaceAnimationEnabled (false)
 , isShuttingDown (false)
 , isShutdown (false)
 , startTime (0)
@@ -237,7 +240,7 @@ void App::init () {
 		path = OsUtil::getUserDataPath ();
 		if (! path.empty ()) {
 			result = OsUtil::createDirectory (path);
-			if (result != OsUtil::Result::Success) {
+			if (result != OsUtil::Success) {
 				Log::warning ("Application data cannot be saved (failed to create directory); path=\"%s\" err=%i", path.c_str (), result);
 			}
 		}
@@ -290,7 +293,7 @@ int App::run () {
 	}
 	else {
 		result = prefsMap.read (prefsPath, true);
-		if (result != OsUtil::Result::Success) {
+		if (result != OsUtil::Success) {
 			Log::debug ("Failed to read preferences file; prefsPath=\"%s\" err=%i", prefsPath.c_str (), result);
 			prefsMap.clear ();
 		}
@@ -298,18 +301,18 @@ int App::run () {
 	isHttpsEnabled = prefsMap.find (App::HttpsKey, true);
 
 	result = resource.open ();
-	if (result != OsUtil::Result::Success) {
+	if (result != OsUtil::Success) {
 		Log::err ("Failed to open application resources; err=%i", result);
 		return (result);
 	}
 	result = uiText.load (OsUtil::getEnvLanguage (UiText::DefaultLanguage));
-	if (result != OsUtil::Result::Success) {
+	if (result != OsUtil::Success) {
 		Log::err ("Failed to load text resources; err=%i", result);
 		return (result);
 	}
 	network.maxRequestThreads = prefsMap.find (App::NetworkThreadsKey, Network::DefaultMaxRequestThreads);
 	result = network.start ();
-	if (result != OsUtil::Result::Success) {
+	if (result != OsUtil::Success) {
 		Log::err ("Failed to acquire application network resources; err=%i", result);
 		return (result);
 	}
@@ -332,15 +335,15 @@ int App::runWindow () {
 
 	if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
 		Log::err ("Failed to start SDL: %s", SDL_GetError ());
-		return (OsUtil::Result::SdlOperationFailedError);
+		return (OsUtil::SdlOperationFailedError);
 	}
 	if (IMG_Init (IMG_INIT_JPG | IMG_INIT_PNG) != (IMG_INIT_JPG | IMG_INIT_PNG)) {
 		Log::err ("Failed to start SDL_image: %s", IMG_GetError ());
-		return (OsUtil::Result::SdlOperationFailedError);
+		return (OsUtil::SdlOperationFailedError);
 	}
 
 	result = input.start ();
-	if (result != OsUtil::Result::Success) {
+	if (result != OsUtil::Success) {
 		Log::err ("Failed to acquire application input devices; err=%i", result);
 		return (result);
 	}
@@ -380,12 +383,12 @@ int App::runWindow () {
 	result = SDL_CreateWindowAndRenderer (windowWidth, windowHeight, 0, &window, &render);
 	if (result != 0) {
 		Log::err ("Failed to create application window: %s", SDL_GetError ());
-		return (OsUtil::Result::SdlOperationFailedError);
+		return (OsUtil::SdlOperationFailedError);
 	}
 	result = SDL_GetRendererInfo (render, &renderinfo);
 	if (result != 0) {
 		Log::err ("Failed to create application renderer: %s", SDL_GetError ());
-		return (OsUtil::Result::SdlOperationFailedError);
+		return (OsUtil::SdlOperationFailedError);
 	}
 	if ((renderinfo.flags & (SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE)) == (SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE)) {
 		isTextureRenderEnabled = true;
@@ -410,7 +413,7 @@ int App::runWindow () {
 	SDL_SetWindowTitle (window, uiText.getText (UiTextString::MembraneMediaLibrary).c_str ());
 	uiConfig.resetScale ();
 	result = uiConfig.load (fontScale);
-	if (result != OsUtil::Result::Success) {
+	if (result != OsUtil::Success) {
 		Log::err ("Failed to load application resources; err=%i", result);
 		return (result);
 	}
@@ -521,7 +524,7 @@ int App::runWindow () {
 		t1 = OsUtil::getTime ();
 		input.pollEvents ();
 		if (! FLOAT_EQUALS (fontScale, nextFontScale)) {
-			if (uiConfig.reloadFonts (nextFontScale) != OsUtil::Result::Success) {
+			if (uiConfig.reloadFonts (nextFontScale) != OsUtil::Success) {
 				nextFontScale = fontScale;
 			}
 			else {
@@ -580,7 +583,7 @@ int App::runWindow () {
 	}
 	Log::info ("Application ended; updateCount=%lli drawCount=%lli runtime=%.3fs FPS=%f pid=%i", (long long) updateCount, (long long) drawCount, ((double) elapsed) / 1000.0f, fps, OsUtil::getProcessId ());
 
-	return (OsUtil::Result::Success);
+	return (OsUtil::Success);
 }
 
 void App::populateWidgets () {
@@ -606,7 +609,6 @@ void App::populateRoundedCornerSprite () {
 		delete (roundedCornerSprite);
 	}
 	roundedCornerSprite = new Sprite ();
-
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 	rmask = 0xFF000000;
 	gmask = 0x00FF0000;
@@ -631,7 +633,6 @@ void App::populateRoundedCornerSprite () {
 			roundedCornerSprite = NULL;
 			return;
 		}
-
 		dest = pixels;
 		y = 0;
 		while (y < h) {
@@ -658,7 +659,6 @@ void App::populateRoundedCornerSprite () {
 				++dest;
 				++x;
 			}
-
 			++y;
 		}
 
@@ -670,9 +670,8 @@ void App::populateRoundedCornerSprite () {
 			roundedCornerSprite = NULL;
 			return;
 		}
-
 		path.sprintf ("*_App::roundedCornerSprite_%llx", (long long int) App::instance->getUniqueId ());
-		texture = App::instance->resource.createTexture (path, surface);
+		texture = Resource::instance->createTexture (path, surface);
 		SDL_FreeSurface (surface);
 		free (pixels);
 		if (! texture) {
@@ -680,7 +679,6 @@ void App::populateRoundedCornerSprite () {
 			roundedCornerSprite = NULL;
 			return;
 		}
-
 		roundedCornerSprite->addTexture (texture, path);
 		++radius;
 	}
@@ -950,7 +948,7 @@ void App::writePrefs () {
 	SDL_LockMutex (prefsMapMutex);
 	if (prefsMap.isWriteDirty) {
 		result = prefsMap.write (prefsPath);
-		if (result != OsUtil::Result::Success) {
+		if (result != OsUtil::Success) {
 			Log::err ("Failed to write prefs file; prefsPath=\"%s\" err=%i", prefsPath.c_str (), result);
 			isPrefsWriteDisabled = true;
 		}
@@ -984,7 +982,7 @@ void App::resizeWindow () {
 
 	uiConfig.coreSprites.resize ();
 	result = uiConfig.reloadFonts (fontScale);
-	if (result != OsUtil::Result::Success) {
+	if (result != OsUtil::Success) {
 		Log::err ("Failed to reload fonts; fontScale=%.2f err=%i", fontScale, result);
 	}
 

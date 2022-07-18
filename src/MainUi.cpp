@@ -1,5 +1,5 @@
 /*
-* Copyright 2018-2021 Membrane Software <author@membranesoftware.com> https://membranesoftware.com
+* Copyright 2018-2022 Membrane Software <author@membranesoftware.com> https://membranesoftware.com
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions are met:
@@ -73,7 +73,7 @@ MainUi::MainUi ()
 MainUi::~MainUi () {
 }
 
-int MainUi::doLoad () {
+OsUtil::Result MainUi::doLoad () {
 	Panel *bg, *bar;
 	Image *image;
 	Label *label;
@@ -107,7 +107,7 @@ int MainUi::doLoad () {
 	mediaLibraryWindow->setDisplayState (MediaLibraryWindow::Waiting);
 	setStage (Starting);
 
-	return (OsUtil::Result::Success);
+	return (OsUtil::Success);
 }
 
 void MainUi::doUnload () {
@@ -234,7 +234,7 @@ void MainUi::findApplication (void *uiPtr) {
 	MainUi *ui;
 	HashMap map;
 	StdString val;
-	int result;
+	OsUtil::Result result;
 
 	ui = (MainUi *) uiPtr;
 	if (! ui->isLoaded) {
@@ -242,7 +242,7 @@ void MainUi::findApplication (void *uiPtr) {
 		return;
 	}
 	result = map.read (OsUtil::getAppendPath (StdString ("conf"), StdString ("build.conf")), true);
-	if (result != OsUtil::Result::Success) {
+	if (result != OsUtil::Success) {
 		ui->mediaLibraryWindow->setDisplayState (MediaLibraryWindow::Uninstalled);
 	}
 	else {
@@ -261,12 +261,12 @@ void MainUi::findApplication (void *uiPtr) {
 
 int MainUi::invokeCommand (Json *command) {
 	if (! command) {
-		return (OsUtil::Result::InvalidParamError);
+		return (OsUtil::InvalidParamError);
 	}
 	retain ();
 	Network::instance->sendHttpPost (StdString::createSprintf ("%s://%s:%i%s", App::instance->isHttpsEnabled ? "https" : "http", Network::LocalhostAddress.c_str (), SystemInterface::Constant_DefaultTcpPort1, SystemInterface::Constant_DefaultInvokePath), command->toString (), Network::HttpRequestCallbackContext (MainUi::httpRequestComplete, this));
 	delete (command);
-	return (OsUtil::Result::Success);
+	return (OsUtil::Success);
 }
 
 void MainUi::httpRequestComplete (void *uiPtr, const StdString &targetUrl, int statusCode, SharedBuffer *responseData) {
@@ -283,6 +283,10 @@ void MainUi::httpRequestComplete (void *uiPtr, const StdString &targetUrl, int s
 
 	switch (ui->stage) {
 		case WaitingGetStatus1: {
+			if (statusCode == Network::HttpUnauthorizedCode) {
+				ui->mediaLibraryWindow->setDisplayState (MediaLibraryWindow::Running);
+				break;
+			}
 			if (!((statusCode == Network::HttpOkCode) && responseData && (responseData->length > 0))) {
 				ui->mediaLibraryWindow->setDisplayState (MediaLibraryWindow::Stopped);
 				break;
@@ -303,6 +307,11 @@ void MainUi::httpRequestComplete (void *uiPtr, const StdString &targetUrl, int s
 			break;
 		}
 		case WaitingGetStatus2: {
+			if (statusCode == Network::HttpUnauthorizedCode) {
+				ui->mediaLibraryWindow->setDisplayState (MediaLibraryWindow::Running);
+				ui->setStage (NoStage);
+				break;
+			}
 			if (!((statusCode == Network::HttpOkCode) && responseData && (responseData->length > 0))) {
 				ui->setStage (ContactingStartedApplication, 0, ui->stageCount + 1);
 				break;
@@ -334,6 +343,10 @@ void MainUi::startClicked (void *uiPtr, Widget *widgetPtr) {
 
 	ui = (MainUi *) uiPtr;
 	if (ui->processData) {
+		return;
+	}
+	if (OsUtil::setEnvValue (StdString ("DATA_DIRECTORY"), OsUtil::getUserDataPath ()) != OsUtil::Success) {
+		Log::err ("Failed to set process environment variable");
 		return;
 	}
 	proc = OsUtil::executeProcess (StdString ("node"), StdString ("src/Main.js"));
